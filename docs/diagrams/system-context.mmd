@@ -1,0 +1,54 @@
+flowchart TB
+    subgraph Users
+        F[Frontend<br/>React + MetaMask]
+    end
+
+    subgraph Backend["apps/backend"]
+        API[Chalice API]
+        ING[MQTT ingest<br/>solar_market.iot]
+        SVC[Domain services<br/>energy · credit · market · redemption]
+        REPO[Repositories<br/>SQLAlchemy]
+        CHAIN[Blockchain layer<br/>Web3 · TokenService]
+    end
+
+    subgraph IoT["iot/"]
+        SIM[Simulator]
+        GW[gRPC gateway]
+        PUB[Publishers<br/>MQTT · AWS IoT]
+    end
+
+    subgraph Infra
+        MQ[(Mosquitto)]
+        DB[(TimescaleDB)]
+        ANV[(Anvil EVM)]
+    end
+
+    subgraph Chain
+        SUN[SUNToken]
+        MKT[EnergyMarketplace]
+        RED[RedemptionManager]
+    end
+
+    F -->|HTTP/JSON| API
+    F -->|JSON-RPC sign| SUN
+    F -->|JSON-RPC sign| MKT
+    F -->|JSON-RPC sign| RED
+
+    SIM -->|gRPC| GW
+    GW --> PUB
+    PUB -->|MQTT QoS 1| MQ
+
+    MQ --> ING
+    ING --> REPO
+
+    API --> SVC
+    API --> REPO
+    SVC --> REPO
+    SVC --> CHAIN
+
+    REPO --> DB
+    CHAIN -->|JSON-RPC| ANV
+
+    ANV --- SUN
+    ANV --- MKT
+    ANV --- RED
