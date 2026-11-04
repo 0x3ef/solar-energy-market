@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+build/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Solidity
+out/
+cache/
+broadcast/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
