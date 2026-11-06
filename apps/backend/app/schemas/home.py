@@ -11,10 +11,12 @@ from pydantic import BaseModel, ConfigDict, Field
 class HomeCreate(BaseModel):
     """Request body to register a home."""
 
-    owner_id: uuid.UUID | None = None
     name: str = Field(min_length=1, max_length=100)
+    address: str | None = None
     city: str | None = Field(default=None, max_length=100)
     country: str = Field(default="Colombia", max_length=100)
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
     timezone: str = Field(default="America/Bogota", max_length=60)
     installed_capacity_w: int = Field(gt=0)
     has_battery: bool = False
@@ -28,8 +30,11 @@ class HomeOut(BaseModel):
     id: uuid.UUID
     owner_id: uuid.UUID
     name: str
+    address: str | None
     city: str | None
     country: str
+    latitude: float | None
+    longitude: float | None
     timezone: str
     installed_capacity_w: int
     has_battery: bool
@@ -60,6 +65,11 @@ class DeviceOut(BaseModel):
     home_id: uuid.UUID
     device_code: str
     device_type: str
+    manufacturer: str | None
+    model: str | None
+    serial_number: str | None
+    installation_date: date | None
+    firmware_version: str | None
     status: str
     last_seen_at: datetime | None
     created_at: datetime

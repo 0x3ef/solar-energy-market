@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_home_access
 from app.db.models.home import Home
 from app.db.models.security import HomeMember
 from app.repositories.energy_repository import EnergyRepository
@@ -28,8 +28,11 @@ async def create_home(
     home = Home(
         owner_id=user.id,
         name=body.name,
+        address=body.address,
         city=body.city,
         country=body.country,
+        latitude=body.latitude,
+        longitude=body.longitude,
         timezone=body.timezone,
         installed_capacity_w=body.installed_capacity_w,
         has_battery=body.has_battery,
@@ -64,7 +67,7 @@ async def get_home(
 @router.get("/homes/{home_id}/devices")
 async def list_home_devices(
     home_id: uuid.UUID,
-    _: object = Depends(get_current_user),
+    _: object = Depends(require_home_access),
     session: AsyncSession = Depends(get_db),
 ) -> list[dict]:
     """Return the devices of a home."""
@@ -106,7 +109,7 @@ class MemberRequest(BaseModel):
 @router.get("/homes/{home_id}/members")
 async def list_members(
     home_id: uuid.UUID,
-    _: object = Depends(get_current_user),
+    _: object = Depends(require_home_access),
     session: AsyncSession = Depends(get_db),
 ) -> list[dict[str, object]]:
     """List home membership records."""

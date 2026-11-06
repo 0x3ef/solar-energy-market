@@ -9,7 +9,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, get_energy_service
+from app.api.deps import get_db, get_energy_service, require_admin, require_home_access
 from app.repositories.energy_repository import EnergyRepository
 from app.schemas.energy import (
     AggregateRequest,
@@ -27,6 +27,7 @@ _SAMPLE_SECONDS = 15.0
 @router.get("/homes/{home_id}/energy/latest")
 async def latest_by_home(
     home_id: uuid.UUID,
+    _: object = Depends(require_home_access),
     session: AsyncSession = Depends(get_db),
 ) -> list[dict]:
     """Return the latest telemetry for each device of a home."""
@@ -50,6 +51,7 @@ async def latest_by_home(
 )
 async def summary(
     home_id: uuid.UUID,
+    _: object = Depends(require_home_access),
     session: AsyncSession = Depends(get_db),
 ) -> EnergySummaryOut:
     """Aggregate generation/consumption over the last 24 h."""
@@ -97,6 +99,7 @@ async def summary(
 async def list_intervals(
     home_id: uuid.UUID,
     limit: int = Query(100, ge=1, le=1000),
+    _: object = Depends(require_home_access),
     session: AsyncSession = Depends(get_db),
 ) -> list[EnergyIntervalOut]:
     """Return the most recent aggregated intervals of a home."""
@@ -109,6 +112,7 @@ async def list_intervals(
 async def history(
     home_id: uuid.UUID,
     limit: int = Query(100, ge=1, le=1000),
+    _: object = Depends(require_home_access),
     session: AsyncSession = Depends(get_db),
 ) -> list[EnergyIntervalOut]:
     """Return historical energy intervals."""
@@ -118,7 +122,9 @@ async def history(
 
 @router.get("/homes/{home_id}/energy/production")
 async def production(
-    home_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+    home_id: uuid.UUID,
+    _: object = Depends(require_home_access),
+    session: AsyncSession = Depends(get_db),
 ) -> dict[str, int]:
     """Return generation totals for the latest intervals."""
     rows = await EnergyRepository(session).list_intervals(home_id=home_id, limit=100)
@@ -127,7 +133,9 @@ async def production(
 
 @router.get("/homes/{home_id}/energy/consumption")
 async def consumption(
-    home_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+    home_id: uuid.UUID,
+    _: object = Depends(require_home_access),
+    session: AsyncSession = Depends(get_db),
 ) -> dict[str, int]:
     """Return consumption totals for the latest intervals."""
     rows = await EnergyRepository(session).list_intervals(home_id=home_id, limit=100)
@@ -136,7 +144,9 @@ async def consumption(
 
 @router.get("/homes/{home_id}/energy/export")
 async def export_energy(
-    home_id: uuid.UUID, session: AsyncSession = Depends(get_db)
+    home_id: uuid.UUID,
+    _: object = Depends(require_home_access),
+    session: AsyncSession = Depends(get_db),
 ) -> dict[str, int]:
     """Return measured and eligible export totals."""
     rows = await EnergyRepository(session).list_intervals(home_id=home_id, limit=100)
@@ -151,6 +161,7 @@ async def aggregate(
     body: AggregateRequest,
     service: EnergyService = Depends(get_energy_service),
     session: AsyncSession = Depends(get_db),
+    _: object = Depends(require_admin),
 ) -> EnergyIntervalOut:
     """Trigger an aggregation for an explicit window."""
     interval = await service.aggregate_interval(

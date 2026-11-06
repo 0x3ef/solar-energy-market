@@ -118,11 +118,13 @@ class MarketplaceService:
             )
         return trades
 
-    async def cancel_order(self, order_id: uuid.UUID) -> Order:
+    async def cancel_order(self, order_id: uuid.UUID, user_id: uuid.UUID) -> Order:
         """Cancel an open order."""
         order = await self._orders.get_order(order_id)
         if order is None:
             raise ValueError(f"Order {order_id} not found")
+        if order.seller_id != user_id:
+            raise PermissionError("order ownership required")
         if order.status == "filled":
             raise ValueError("Cannot cancel a filled order")
         order.status = "cancelled"

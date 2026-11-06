@@ -13,7 +13,6 @@ from pydantic import BaseModel, ConfigDict, Field
 class OrderCreate(BaseModel):
     """Request body to place an order."""
 
-    seller_id: uuid.UUID | None = None
     order_type: Literal["sell", "buy"]
     token_amount: Decimal = Field(gt=0)
     price_per_token: Decimal = Field(gt=0)
@@ -38,7 +37,6 @@ class OrderOut(BaseModel):
 class FillRequest(BaseModel):
     """Request body to fill the best available orders."""
 
-    buyer_id: uuid.UUID | None = None
     token_amount: Decimal = Field(gt=0)
 
 
@@ -61,7 +59,6 @@ class TradeOut(BaseModel):
 class RedemptionCreate(BaseModel):
     """Request body to redeem SUN tokens."""
 
-    user_id: uuid.UUID | None = None
     wallet_id: uuid.UUID
     token_amount: Decimal = Field(gt=0)
 

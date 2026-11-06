@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from collections.abc import AsyncIterator
 
 from fastapi import Depends, HTTPException, status
@@ -11,7 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session_factory
 from app.core.security import decode_access_token
-from app.db.models.security import UserRole
+from app.db.models.home import Home
+from app.db.models.security import HomeMember, UserRole
 from app.db.models.user import User
 from app.services.credit_service import CreditService
 from app.services.energy_service import EnergyService
@@ -99,4 +101,24 @@ async def require_admin(
     )
     if is_admin is None:
         raise HTTPException(status_code=403, detail="administrator access required")
+    return user
+
+
+async def require_home_access(
+    home_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> User:
+    """Require the principal to own or be a member of a home."""
+    home = await session.get(Home, home_id)
+    if home is None:
+        raise HTTPException(status_code=404, detail="home not found")
+    member = await session.scalar(
+        select(HomeMember).where(
+            HomeMember.home_id == home_id,
+            HomeMember.user_id == user.id,
+        )
+    )
+    if member is None:
+        raise HTTPException(status_code=403, detail="home access denied")
     return user

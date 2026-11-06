@@ -86,9 +86,10 @@ async def cancel_order(
     session: AsyncSession = Depends(get_db),
 ) -> OrderOut:
     """Cancel an open order."""
-    order = await service.cancel_order(order_id)
-    if order.seller_id != user.id:
-        raise HTTPException(status_code=403, detail="order ownership required")
+    try:
+        order = await service.cancel_order(order_id, user.id)
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
     await session.commit()
     return OrderOut.model_validate(order)
 
