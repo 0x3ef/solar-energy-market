@@ -22,6 +22,13 @@ class AuthenticationError(ValueError):
     """Raised when authentication credentials are invalid."""
 
 
+def _is_expired(value: datetime, now: datetime) -> bool:
+    """Compare database timestamps consistently across PostgreSQL and SQLite."""
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    return value <= now
+
+
 class AuthService:
     """Implement registration, login, and refresh-token rotation."""
 
@@ -74,7 +81,9 @@ class AuthService:
             select(RefreshToken).where(RefreshToken.token_hash == token_hash)
         )
         now = datetime.now(UTC)
-        if token is None or token.revoked_at is not None or token.expires_at <= now:
+        if token is None or token.revoked_at is not None or _is_expired(
+            token.expires_at, now
+        ):
             raise AuthenticationError("invalid refresh token")
         user = await self._session.get(User, token.user_id)
         if user is None or user.status != "active":
@@ -122,7 +131,9 @@ class AuthService:
             )
         )
         now = datetime.now(UTC)
-        if token is None or token.used_at is not None or token.expires_at <= now:
+        if token is None or token.used_at is not None or _is_expired(
+            token.expires_at, now
+        ):
             raise AuthenticationError("invalid or expired password reset token")
         user = await self._session.get(User, token.user_id)
         if user is None or user.status != "active":
@@ -174,7 +185,9 @@ class AuthService:
             )
         )
         now = datetime.now(UTC)
-        if challenge is None or challenge.used_at is not None or challenge.expires_at <= now:
+        if challenge is None or challenge.used_at is not None or _is_expired(
+            challenge.expires_at, now
+        ):
             raise AuthenticationError("invalid or expired wallet challenge")
         message = encode_defunct(
             text=self.wallet_message(challenge.address, chain_id, challenge.nonce)

@@ -28,6 +28,19 @@ jobs:
       - run: mypy .
       - run: pytest --cov-fail-under=0
 
+  backend-integration:
+    name: Backend PostgreSQL integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: docker compose -f infrastructure/docker/docker-compose.yml up -d timescaledb migrator
+      - run: docker compose -f infrastructure/docker/docker-compose.yml run --rm tests pytest -m integration -q --cov-fail-under=0
+      - if: always()
+        run: docker compose -f infrastructure/docker/docker-compose.yml down -v
+
   iot:
     name: IoT lint, type-check, and tests
     runs-on: ubuntu-latest
