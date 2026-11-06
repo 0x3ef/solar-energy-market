@@ -118,3 +118,39 @@ def test_all_services_publish(in_process_server) -> None:
         )
     )
     assert len(publisher.messages) == 3
+
+
+def test_gateway_defaults_missing_timestamp_to_utc(in_process_server) -> None:
+    """A missing producer timestamp still yields a valid envelope."""
+    channel, publisher = in_process_server
+    stub = sensor_pb2_grpc.SmartMeterSensorServiceStub(channel)
+
+    response = stub.SendSmartMeterRequest(
+        sensor_pb2.SmartMeterSensorRequest(
+            device_id="SM-DEFAULT-TIME",
+            home_id="HOME-1",
+            sequence=2,
+        )
+    )
+
+    assert response.status == "OK"
+    assert publisher.messages[0][1]["measured_at"].endswith("+00:00")
+
+
+def test_gateway_preserves_sequence_and_schema_version(in_process_server) -> None:
+    """The gateway must forward idempotency sequence metadata unchanged."""
+    channel, publisher = in_process_server
+    stub = sensor_pb2_grpc.SmartMeterSensorServiceStub(channel)
+
+    stub.SendSmartMeterRequest(
+        sensor_pb2.SmartMeterSensorRequest(
+            device_id="SM-SEQUENCE",
+            home_id="HOME-1",
+            sequence=987,
+            timestamp="2026-01-15T12:00:00+00:00",
+        )
+    )
+
+    envelope = publisher.messages[0][1]
+    assert envelope["sequence_number"] == 987
+    assert envelope["schema_version"] == "1.0"
