@@ -43,16 +43,6 @@ async def register(
     )
 
 
-@router.post(
-    "/users", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
-)
-async def register_user_alias(
-    payload: UserCreate, session: AsyncSession = Depends(get_db)
-) -> TokenResponse:
-    """Register a user at the versioned endpoint required by the API contract."""
-    return await register(payload, session)
-
-
 @router.post("/login", response_model=TokenResponse)
 async def login(
     payload: LoginRequest, session: AsyncSession = Depends(get_db)

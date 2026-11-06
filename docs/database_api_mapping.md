@@ -9,7 +9,7 @@ is the generated PostgreSQL/TimescaleDB bootstrap script; the SQL in
 
 | API area | Request/response | Tables | Authorization | Transaction boundary |
 |---|---|---|---|---|
-| `POST /api/v1/auth/register` | `UserCreate` / `UserOut` | `users` | Public; registration creates the principal | One request transaction |
+| `POST /api/v1/auth/register` | `UserCreate` / `TokenResponse` | `users`, `refresh_tokens` | Public; canonical registration endpoint | One request transaction |
 | `GET /api/v1/users/me` | None / `UserOut` | `users`, `wallets`, `energy_credits` | Authenticated principal only | Read-only request |
 | `POST /api/v1/homes` | `HomeCreate` / `HomeOut` | `homes`, `home_members` | Authenticated; owner is derived from the token | Home and owner membership are committed together |
 | `GET /api/v1/users/me/homes` | None / `HomeOut[]` | `homes`, `home_members` | Authenticated member | Read-only request |
@@ -17,6 +17,8 @@ is the generated PostgreSQL/TimescaleDB bootstrap script; the SQL in
 
 `owner_id`, `seller_id`, `buyer_id`, and redemption `user_id` are not accepted
 as authoritative identity inputs. The authenticated principal is used instead.
+User registration is intentionally exposed only at `/api/v1/auth/register`;
+`/api/v1/users` is reserved for user resources and has no registration action.
 
 ## Devices and telemetry
 
@@ -62,4 +64,3 @@ multi-worker matching in production.
 completed` (or `rejected`). `redemption_settlements` stores external settlement
 evidence separately. Credit reservation and on-chain escrow remain an explicit
 product decision documented in `architecture_decisions.md`.
-

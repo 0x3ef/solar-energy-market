@@ -168,6 +168,17 @@
             "title": "Device Type",
             "type": "string"
           },
+          "firmware_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Firmware Version"
+          },
           "home_id": {
             "format": "uuid",
             "title": "Home Id",
@@ -177,6 +188,18 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "installation_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installation Date"
           },
           "last_seen_at": {
             "anyOf": [
@@ -190,6 +213,39 @@
             ],
             "title": "Last Seen At"
           },
+          "manufacturer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manufacturer"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "serial_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial Number"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -200,6 +256,11 @@
           "home_id",
           "device_code",
           "device_type",
+          "manufacturer",
+          "model",
+          "serial_number",
+          "installation_date",
+          "firmware_version",
           "status",
           "last_seen_at",
           "created_at"
@@ -364,18 +425,6 @@
       "FillRequest": {
         "description": "Request body to fill the best available orders.",
         "properties": {
-          "buyer_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Buyer Id"
-          },
           "token_amount": {
             "anyOf": [
               {
@@ -411,6 +460,17 @@
       "HomeCreate": {
         "description": "Request body to register a home.",
         "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
           "city": {
             "anyOf": [
               {
@@ -439,23 +499,37 @@
             "title": "Installed Capacity W",
             "type": "integer"
           },
-          "name": {
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
-          },
-          "owner_id": {
+          "latitude": {
             "anyOf": [
               {
-                "format": "uuid",
-                "type": "string"
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Owner Id"
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
           },
           "timezone": {
             "default": "America/Bogota",
@@ -474,6 +548,17 @@
       "HomeOut": {
         "description": "Public representation of a home.",
         "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
           "city": {
             "anyOf": [
               {
@@ -507,6 +592,28 @@
             "title": "Installed Capacity W",
             "type": "integer"
           },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -529,8 +636,11 @@
           "id",
           "owner_id",
           "name",
+          "address",
           "city",
           "country",
+          "latitude",
+          "longitude",
           "timezone",
           "installed_capacity_w",
           "has_battery",
@@ -690,18 +800,6 @@
             ],
             "title": "Price Per Token"
           },
-          "seller_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Seller Id"
-          },
           "token_amount": {
             "anyOf": [
               {
@@ -832,18 +930,6 @@
               }
             ],
             "title": "Token Amount"
-          },
-          "user_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Id"
           },
           "wallet_id": {
             "format": "uuid",
@@ -1717,48 +1803,6 @@
         ]
       }
     },
-    "/api/v1/auth/users": {
-      "post": {
-        "description": "Register a user at the versioned endpoint required by the API contract.",
-        "operationId": "register_user_alias_api_v1_auth_users_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Register User Alias",
-        "tags": [
-          "authentication"
-        ]
-      }
-    },
     "/api/v1/auth/wallet/nonce": {
       "post": {
         "description": "Issue a short-lived challenge for wallet ownership.",
@@ -2534,6 +2578,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Aggregate",
         "tags": [
           "energy",
@@ -2736,6 +2785,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Consumption",
         "tags": [
           "energy",
@@ -2785,6 +2839,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Export Energy",
         "tags": [
           "energy",
@@ -2846,6 +2905,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "History",
         "tags": [
           "energy",
@@ -2907,6 +2971,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Intervals",
         "tags": [
           "energy",
@@ -2957,6 +3026,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Latest By Home",
         "tags": [
           "energy",
@@ -3006,6 +3080,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Production",
         "tags": [
           "energy",
@@ -3051,6 +3130,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Summary",
         "tags": [
           "energy",
@@ -4007,49 +4091,6 @@
         "tags": [
           "redemptions",
           "redemptions"
-        ]
-      }
-    },
-    "/api/v1/users": {
-      "post": {
-        "description": "Register a new user and return the user plus an access token.",
-        "operationId": "create_user_api_v1_users_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Create User",
-        "tags": [
-          "users",
-          "users"
         ]
       }
     },

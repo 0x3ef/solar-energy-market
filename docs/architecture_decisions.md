@@ -20,6 +20,10 @@
 6. **Outbox.** Database state changes and `outbox_events` are committed in one
    transaction. Workers claim bounded batches, retry with backoff, and
    dead-letter exhausted or unknown event types.
+7. **Canonical registration.** User creation is owned by the authentication
+   router at `/api/v1/auth/register`; the users router contains only
+   authenticated user and wallet resources, avoiding duplicate registration
+   semantics.
 
 ## Recommendations requiring product approval
 

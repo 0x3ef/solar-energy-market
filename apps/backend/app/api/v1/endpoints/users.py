@@ -9,31 +9,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
-from app.core.security import create_access_token
 from app.db.models.wallet import Wallet
-from app.schemas.auth import TokenResponse
-from app.schemas.user import UserCreate, UserOut, WalletCreate, WalletOut
-from app.services.auth_service import AuthService
+from app.schemas.user import UserOut, WalletCreate, WalletOut
 
 router = APIRouter(tags=["users"])
-
-
-@router.post("/users")
-async def create_user(
-    body: UserCreate,
-    session: AsyncSession = Depends(get_db),
-) -> TokenResponse:
-    """Register a new user and return the user plus an access token."""
-    try:
-        service = AuthService(session)
-        user = await service.register(body.email, body.full_name, body.password)
-        return TokenResponse(
-            access_token=create_access_token(str(user.id)),
-            refresh_token=await service.issue_refresh_token(user.id),
-            user=UserOut.model_validate(user),
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.get("/users/{user_id}", response_model=UserOut)
