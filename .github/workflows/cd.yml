@@ -1,0 +1,42 @@
+name: CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      rpc_url:
+        description: "Target EVM JSON-RPC endpoint"
+        required: true
+        type: string
+      environment:
+        description: "Deployment environment"
+        required: true
+        default: "staging"
+        type: environment
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-contracts:
+    name: Deploy contracts
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+      - name: Deploy contracts
+        working-directory: contracts
+        env:
+          PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          WEI_PER_TOKEN: ${{ vars.WEI_PER_TOKEN || '1000000000000000' }}
+        run: |
+          test -n "$PRIVATE_KEY"
+          forge script script/Deploy.s.sol \
+            --rpc-url "${{ inputs.rpc_url }}" \
+            --broadcast
+      - name: Upload deployment manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-deployment
+          path: contracts/deployments/*.json
+          if-no-files-found: error
