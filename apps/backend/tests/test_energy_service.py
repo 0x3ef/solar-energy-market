@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from solar_market.models import Base
-from solar_market.services.energy_service import EnergyService
+from app.db.models import Base
+from app.services.energy_service import EnergyService
 
 
 @pytest.fixture()
@@ -27,15 +27,13 @@ async def test_aggregate_without_data(session: AsyncSession) -> None:
     """Aggregating an empty window creates a zero interval."""
     service = EnergyService(session)
     home_id = __import__("uuid").uuid4()
-    end = datetime.now(timezone.utc)
+    end = datetime.now(UTC)
     start = end - timedelta(hours=24)
 
     # Home does not exist in DB; the service only persists the interval,
     # so we need a user + home for FK integrity in real Postgres. SQLite
     # with no FK enforcement accepts the insert.
-    interval = await service.aggregate_interval(
-        home_id=home_id, start=start, end=end
-    )
+    interval = await service.aggregate_interval(home_id=home_id, start=start, end=end)
     assert interval.generation_wh == 0
     assert interval.consumption_wh == 0
     assert interval.eligible_export_wh == 0

@@ -16,9 +16,4 @@
 **/venv/
 **/.env
 **/.env.local
-contracts/out/
-contracts/cache/
-contracts/broadcast/
-iot/grpc_client/sensor_pb2.py
-iot/grpc_client/sensor_pb2_grpc.py
 .DS_Store

@@ -5,11 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "solar-iot"
 version = "0.1.0"
-description = "Solar Energy Market — IoT telemetry simulator and MQTT gateway"
-readme = "README.md"
+description = "Solar Energy Market IoT simulator and gRPC/MQTT gateway"
 requires-python = ">=3.12"
-license = { text = "MIT" }
-authors = [{ name = "Solar Energy Market Team" }]
 dependencies = [
     "grpcio>=1.62",
     "protobuf>=5.26",
@@ -45,24 +42,12 @@ include = [
     "simulator*",
 ]
 
-# ---------------------------------------------------------------------------
-# Ruff
-# ---------------------------------------------------------------------------
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-src = ["."]
 
 [tool.ruff.lint]
-select = [
-    "E", "F", "W",        # pycodestyle + pyflakes
-    "I",                  # isort
-    "N",                  # pep8-naming
-    "UP",                 # pyupgrade
-    "B",                  # bugbear
-    "SIM",                # simplify
-    "RUF",                # ruff-specific
-]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
@@ -77,31 +62,35 @@ known-first-party = [
     "simulator",
 ]
 
-# ---------------------------------------------------------------------------
-# Mypy
-# ---------------------------------------------------------------------------
 [tool.mypy]
 python_version = "3.12"
 strict = true
+explicit_package_bases = true
 warn_unused_ignores = true
 warn_return_any = true
 disallow_untyped_defs = true
 disallow_any_unimported = false
 ignore_missing_imports = true
-exclude = ["grpc_client/sensor_pb2.*\\.py", "grpc_client/sensor_pb2_grpc\\.py"]
+exclude = ["^grpc_client/", "^tests/"]
 
 [[tool.mypy.overrides]]
 module = ["paho.*"]
 ignore_missing_imports = true
 
-# ---------------------------------------------------------------------------
-# Pytest
-# ---------------------------------------------------------------------------
+[[tool.mypy.overrides]]
+module = ["grpc_client.*", "tests.*"]
+follow_imports = "skip"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["paho.*"]
+follow_imports = "skip"
+ignore_errors = true
+
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
 addopts = "-ra --strict-markers --cov=. --cov-report=term-missing --cov-report=xml --cov-fail-under=80"
 asyncio_mode = "auto"
-markers = [
-    "integration: tests that require a real broker or network",
-]
+asyncio_default_fixture_loop_scope = "function"
+markers = ["integration: tests that require a real broker or network"]

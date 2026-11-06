@@ -6,7 +6,7 @@ from typing import Any, Protocol
 
 
 class TelemetryPublisher(Protocol):
-    """Interface for any telemetry sink (console, MQTT, AWS IoT, ...)."""
+    """Interface for telemetry sinks (console and local MQTT)."""
 
     def publish(self, topic: str, message: dict[str, Any]) -> None:
         """Publish a single telemetry message to ``topic``."""

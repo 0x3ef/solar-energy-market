@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 import os
 import socket
+from datetime import UTC, datetime
 
 import pytest
 
@@ -16,7 +15,7 @@ from models.home import Home
 @pytest.fixture()
 def fixed_time() -> datetime:
     """A deterministic UTC timestamp."""
-    return datetime(2026, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+    return datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture()

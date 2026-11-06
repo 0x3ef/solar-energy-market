@@ -7,9 +7,9 @@ from decimal import Decimal
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from solar_market.models import Base
-from solar_market.models.user import User
-from solar_market.services.marketplace_service import MarketplaceService
+from app.db.models import Base
+from app.db.models.user import User
+from app.services.marketplace_service import MarketplaceService
 
 
 @pytest.fixture()
@@ -40,9 +40,7 @@ async def test_place_and_fill_order(session: AsyncSession) -> None:
     )
     assert order.status == "open"
 
-    trades = await service.fill_best_order(
-        buyer_id=buyer.id, token_amount=Decimal("5")
-    )
+    trades = await service.fill_best_order(buyer_id=buyer.id, token_amount=Decimal("5"))
     assert len(trades) == 1
     assert trades[0].token_amount == Decimal("5")
 

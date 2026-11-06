@@ -142,7 +142,7 @@ contract EnergyMarketplace is ReentrancyGuard {
         if (!order.active) revert OrderNotActive();
         if (fillAmount == 0 || fillAmount > order.remaining) revert InvalidAmount();
 
-        uint256 totalCost = fillAmount * order.pricePerToken;
+        uint256 totalCost = (fillAmount * order.pricePerToken) / 1e18;
         if (msg.value < totalCost) revert InsufficientPayment();
 
         order.remaining -= fillAmount;

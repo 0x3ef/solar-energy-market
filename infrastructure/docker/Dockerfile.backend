@@ -4,6 +4,10 @@
 # ============================================================================
 FROM python:3.12-slim AS base
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -12,29 +16,30 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY apps/backend/requirements.txt ./
+COPY apps/backend/requirements.txt ./requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY apps/backend/ .
 
-# Copy the Solidity ABIs (produced by `forge build` before docker build).
-COPY contracts/out ./contracts/out
-
 # ============================================================================
-# Stage 2 — API (Chalice local)
+# Stage 2 — FastAPI API
 # ============================================================================
 FROM base AS api
 EXPOSE 8000
-CMD ["chalice", "local", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # ============================================================================
 # Stage 3 — MQTT ingest worker
 # ============================================================================
 FROM base AS subscriber
-CMD ["python", "-m", "solar_market.iot"]
+CMD ["python", "-m", "app.iot"]
+
+# Stage 4 — durable outbox worker
+FROM base AS worker
+CMD ["python", "-m", "app.workers"]
 
 # ============================================================================
-# Stage 4 — tests
+# Stage 5 — tests
 # ============================================================================
 FROM base AS tests
 RUN pip install pytest pytest-asyncio pytest-cov aiosqlite

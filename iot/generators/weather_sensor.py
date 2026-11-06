@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from math import sin, pi
+import random
+from datetime import UTC, datetime
+from math import pi, sin
 from typing import Any
 
 import grpc
@@ -21,11 +22,23 @@ logger = logging.getLogger(__name__)
 class WeatherGenerator:
     """Produce weather readings with a realistic diurnal cycle."""
 
-    def __init__(self, use_grpc: bool = True) -> None:
+    def __init__(
+        self, use_grpc: bool = True, random_seed: int | None = None
+    ) -> None:
         self._use_grpc = use_grpc
-        self._temperature = BoundedWalk(lo=15.0, hi=35.0, step=0.5)
-        self._humidity = BoundedWalk(lo=40.0, hi=95.0, step=1.0)
-        self._wind = BoundedWalk(lo=0.0, hi=15.0, step=0.5)
+        rng = random.Random(random_seed)
+        self._temperature = BoundedWalk(
+            lo=15.0, hi=35.0, step=0.5,
+            rng=random.Random(rng.random()),
+        )
+        self._humidity = BoundedWalk(
+            lo=40.0, hi=95.0, step=1.0,
+            rng=random.Random(rng.random()),
+        )
+        self._wind = BoundedWalk(
+            lo=0.0, hi=15.0, step=0.5,
+            rng=random.Random(rng.random()),
+        )
 
     def generate(
         self,
@@ -37,7 +50,7 @@ class WeatherGenerator:
         """Return one weather reading for ``sensor``."""
         # Irradiance follows a sine wave peaking at noon.
         local_hour = measured_at.astimezone(
-            timezone.utc
+            UTC
         ).hour + measured_at.minute / 60.0
         solar_angle = max(0.0, sin((local_hour - 6) / 12 * pi))
         irradiance = round(1000.0 * solar_angle, 2)
@@ -63,7 +76,7 @@ class WeatherGenerator:
                 measurements=sensor_pb2.WeatherMeasurements(**reading),
             )
             try:
-                get_weather_stub().SendWeatherRequest(request)
+                get_weather_stub().SendWeatherRequest(request, timeout=5.0)
             except grpc.RpcError as exc:
                 logger.warning(
                     "Weather gRPC failed (%s: %s)",

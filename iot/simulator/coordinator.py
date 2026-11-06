@@ -6,7 +6,7 @@ import logging
 import time
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from threading import Event
 from typing import Any
 
@@ -30,12 +30,15 @@ class SimulationConfig:
     """
 
     interval_seconds: float = 15.0
+    sequence_offset: int = 0
 
     def __post_init__(self) -> None:
         if self.interval_seconds <= 0:
             raise ValueError(
                 "interval_seconds must be greater than zero"
             )
+        if self.sequence_offset < 0:
+            raise ValueError("sequence_offset cannot be negative")
 
 
 class Simulator:
@@ -59,6 +62,7 @@ class Simulator:
         self._publisher = publisher
         self._config = config or SimulationConfig()
         self._sequence_numbers: dict[str, int] = {}
+        self._sequence_offset = self._config.sequence_offset
         self._validate_configuration()
 
     def _validate_configuration(self) -> None:
@@ -85,7 +89,7 @@ class Simulator:
                         f"No generator registered for "
                         f"{sensor.sensor_type}"
                     )
-                self._sequence_numbers[sensor.device_code] = 0
+                self._sequence_numbers[sensor.device_code] = self._sequence_offset
 
     def simulate_sensor(
         self,
@@ -112,6 +116,7 @@ class Simulator:
         )
 
         return {
+            "schema_version": "1.0",
             "home_id": home.home_id,
             "device_id": sensor.device_code,
             "sensor_type": sensor.sensor_type.value,
@@ -122,7 +127,7 @@ class Simulator:
 
     def simulate_cycle(self) -> list[dict[str, Any]]:
         """Run one cycle over every active device."""
-        measured_at = datetime.now(timezone.utc)
+        measured_at = datetime.now(UTC)
         messages: list[dict[str, Any]] = []
 
         for home in self._homes:

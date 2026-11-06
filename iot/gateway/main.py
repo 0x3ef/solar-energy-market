@@ -27,10 +27,6 @@ logger = logging.getLogger("gateway")
 
 def _build_publisher(settings: Settings) -> TelemetryPublisher:
     """Build the publisher requested by ``settings``."""
-    if settings.publisher == PublisherKind.AWS_IOT:
-        from publishers.aws_iot_publisher import AwsIotPublisher
-
-        return AwsIotPublisher()
     if settings.publisher == PublisherKind.MQTT:
         return MqttPublisher(
             host=settings.mqtt_host,

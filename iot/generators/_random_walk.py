@@ -8,6 +8,7 @@ instead of jumping every cycle).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from random import Random
 
 
 @dataclass(slots=True)
@@ -25,6 +26,7 @@ class BoundedWalk:
     hi: float
     step: float
     initial: float | None = None
+    rng: Random = field(default_factory=Random, repr=False)
     _value: float = field(init=False)
 
     def __post_init__(self) -> None:
@@ -43,9 +45,7 @@ class BoundedWalk:
 
     def next(self) -> float:
         """Advance the walk and return the new value."""
-        import random
-
-        delta = random.uniform(-self.step, self.step)
+        delta = self.rng.uniform(-self.step, self.step)
         candidate = self._value + delta
         # Reflect at the boundaries to avoid sticking to an edge.
         if candidate < self.lo:

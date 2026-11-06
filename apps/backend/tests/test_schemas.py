@@ -7,14 +7,12 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from solar_market.schemas.order import OrderCreate, RedemptionCreate
-from solar_market.schemas.user import UserCreate, WalletCreate
+from app.schemas.order import OrderCreate, RedemptionCreate
+from app.schemas.user import UserCreate, WalletCreate
 
 
 def test_user_create_valid() -> None:
-    body = UserCreate(
-        email="a@b.com", full_name="Test", password="12345678"
-    )
+    body = UserCreate(email="a@b.com", full_name="Test", password="12345678")
     assert body.email == "a@b.com"
 
 
@@ -24,9 +22,7 @@ def test_user_create_short_password() -> None:
 
 
 def test_wallet_create_valid_address() -> None:
-    body = WalletCreate(
-        address="0x" + "a" * 40, chain_id=31337
-    )
+    body = WalletCreate(address="0x" + "a" * 40, chain_id=31337)
     assert body.chain_id == 31337
 
 

@@ -4,7 +4,7 @@ ROOT_DIR     := $(shell pwd)
 COMPOSE_FILE := $(ROOT_DIR)/infrastructure/docker/docker-compose.yml
 COMPOSE      := docker compose -f $(COMPOSE_FILE)
 
-.PHONY: help setup up down logs ps build seed test test-contracts test-iot \
+.PHONY: help setup up down logs ps build migrate seed test test-contracts test-iot \
         test-backend lint format typecheck contracts-deploy clean
 
 help: ## Show this help
@@ -31,6 +31,9 @@ build: ## Build all Docker images
 
 seed: ## Load SQL seeds into the running DB
 	./scripts/seed_db.sh
+
+migrate: ## Apply Alembic migrations to the running DB
+	$(COMPOSE) run --rm migrator
 
 test: ## Run every test suite (unit only)
 	./scripts/test.sh

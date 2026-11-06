@@ -1,13 +1,13 @@
 """Pydantic schemas describing the canonical telemetry envelope.
 
-The envelope is the wire format published to MQTT and AWS IoT Core.
+The envelope is the wire format published to the local MQTT broker.
 Any publisher must validate against it before sending, so that bad
 payloads are rejected at the edge.
 """
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -33,7 +33,7 @@ class TelemetryPayload(BaseModel):
     def _ensure_tz_aware(cls, value: datetime) -> datetime:
         if value.tzinfo is None:
             raise ValueError("measured_at must be timezone-aware")
-        return value.astimezone(timezone.utc)
+        return value.astimezone(UTC)
 
     def to_mqtt_payload(self) -> dict[str, Any]:
         """Return a JSON-ready dict (datetime serialised as ISO-8601)."""

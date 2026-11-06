@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from solar_market.core.security import (
+from app.core.security import (
     create_access_token,
     decode_access_token,
     hash_password,

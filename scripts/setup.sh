@@ -64,6 +64,24 @@ if [[ ! -f "${ENV_FILE}" ]]; then
   ok "Environment file created"
 fi
 
+# The deployment script and the backend must use the same Anvil account.
+set -a
+# shellcheck disable=SC1090
+source "${ENV_FILE}"
+set +a
+export PRIVATE_KEY="${PRIVATE_KEY:-${BACKEND_PRIVATE_KEY:-}}"
+export BACKEND_PRIVATE_KEY="${BACKEND_PRIVATE_KEY:-${PRIVATE_KEY}}"
+if [[ "${PRIVATE_KEY}" == *'${'* || "${PRIVATE_KEY}" != 0x* ]]; then
+  export PRIVATE_KEY=""
+fi
+if [[ -z "${PRIVATE_KEY}" ]]; then
+  # This is Anvil's documented account #0 key and is safe only for local
+  # development. Production deployments must provide their own key.
+  export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+  export BACKEND_PRIVATE_KEY="${PRIVATE_KEY}"
+  warn "Using Anvil account #0 for local development"
+fi
+
 # -----------------------------------------------------------------------------
 # 3. Optional clean
 # -----------------------------------------------------------------------------

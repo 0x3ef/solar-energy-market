@@ -43,7 +43,7 @@ WORKDIR /app
 
 # Copy packaging metadata first so pip layer is cached when only code changes.
 COPY pyproject.toml ./
-RUN pip install --upgrade pip && pip install .
+RUN pip install --upgrade pip && pip install ".[dev]"
 
 # Copy the rest of the source tree.
 COPY . .

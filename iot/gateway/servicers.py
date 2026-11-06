@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from grpc_client import sensor_pb2, sensor_pb2_grpc
+from models.sensor import SensorType
 from publishers.base import TelemetryPublisher
 from schemas.telemetry import TelemetryPayload
 
@@ -23,11 +24,11 @@ def _envelope(
 ) -> dict[str, Any]:
     """Build the canonical telemetry envelope."""
     if not measured_at:
-        measured_at = datetime.now(timezone.utc).isoformat()
+        measured_at = datetime.now(UTC).isoformat()
     return TelemetryPayload(
         device_id=device_id,
         home_id=home_id,
-        sensor_type=sensor_type,
+        sensor_type=SensorType(sensor_type),
         sequence_number=sequence,
         measured_at=datetime.fromisoformat(measured_at),
         data=data,
@@ -54,7 +55,7 @@ class _BaseServicer:
 
 
 class SmartMeterServicer(
-    _BaseServicer, sensor_pb2_grpc.SmartMeterSensorServiceServicer
+    _BaseServicer, sensor_pb2_grpc.SmartMeterSensorServiceServicer  # type: ignore[misc]
 ):
     """gRPC servicer for smart meters."""
 
@@ -83,7 +84,7 @@ class SmartMeterServicer(
 
 
 class SolarInverterServicer(
-    _BaseServicer, sensor_pb2_grpc.SolarInverterSensorServiceServicer
+    _BaseServicer, sensor_pb2_grpc.SolarInverterSensorServiceServicer  # type: ignore[misc]
 ):
     """gRPC servicer for solar inverters."""
 
@@ -105,12 +106,13 @@ class SolarInverterServicer(
             request.home_id, request.device_id, "solar_inverter",
             request.sequence, request.timestamp, data,
         )
+        logger.info("Telemetry received from sensor: %s %s", request, _topic(request.home_id, request.device_id))
         self._publish(_topic(request.home_id, request.device_id), envelope)
         return sensor_pb2.SolarInverterSensorResponse(status="OK")
 
 
 class WeatherServicer(
-    _BaseServicer, sensor_pb2_grpc.WeatherSensorServiceServicer
+    _BaseServicer, sensor_pb2_grpc.WeatherSensorServiceServicer  # type: ignore[misc]
 ):
     """gRPC servicer for weather stations."""
 
@@ -129,12 +131,13 @@ class WeatherServicer(
             request.home_id, request.device_id, "weather_sensor",
             request.sequence, request.timestamp, data,
         )
+        logger.info("Telemetry received from sensor: %s %s", request, _topic(request.home_id, request.device_id))
         self._publish(_topic(request.home_id, request.device_id), envelope)
         return sensor_pb2.WeatherSensorResponse(status="OK")
 
 
 class BatteryMonitorServicer(
-    _BaseServicer, sensor_pb2_grpc.BatteryMonitorSensorServiceServicer
+    _BaseServicer, sensor_pb2_grpc.BatteryMonitorSensorServiceServicer  # type: ignore[misc]
 ):
     """gRPC servicer for battery monitors."""
 
@@ -156,5 +159,6 @@ class BatteryMonitorServicer(
             request.home_id, request.device_id, "battery_monitor",
             request.sequence, request.timestamp, data,
         )
+        logger.info("Telemetry received from sensor: %s %s", request, _topic(request.home_id, request.device_id))
         self._publish(_topic(request.home_id, request.device_id), envelope)
         return sensor_pb2.BatteryMonitorSensorResponse(details="OK")

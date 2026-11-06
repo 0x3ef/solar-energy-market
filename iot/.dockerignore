@@ -9,6 +9,8 @@ venv/
 .coverage
 coverage.xml
 htmlcov/
-tests/
 .env
 .DS_Store
+__pycache__/
+*.pyc
+.venv/

@@ -21,12 +21,19 @@ logger = logging.getLogger(__name__)
 class BatteryGenerator:
     """Produce battery readings with a state-of-charge random walk."""
 
-    def __init__(self, use_grpc: bool = True) -> None:
+    def __init__(
+        self, use_grpc: bool = True, random_seed: int | None = None
+    ) -> None:
         self._use_grpc = use_grpc
+        self._random = random.Random(random_seed)
         self._soc = BoundedWalk(
-            lo=10.0, hi=100.0, step=2.0, initial=80.0
+            lo=10.0, hi=100.0, step=2.0, initial=80.0,
+            rng=random.Random(self._random.random()),
         )
-        self._temperature = BoundedWalk(lo=20.0, hi=45.0, step=0.5)
+        self._temperature = BoundedWalk(
+            lo=20.0, hi=45.0, step=0.5,
+            rng=random.Random(self._random.random()),
+        )
 
     def generate(
         self,
@@ -42,11 +49,11 @@ class BatteryGenerator:
 
         # Simple heuristic: charge when SOC < 50, discharge otherwise.
         if soc < 50.0:
-            current = round(random.uniform(5, 30), 2)
+            current = round(self._random.uniform(5, 30), 2)
             charge_power = round(current * voltage, 2)
             discharge_power = 0.0
         else:
-            current = round(random.uniform(-30, -5), 2)
+            current = round(self._random.uniform(-30, -5), 2)
             charge_power = 0.0
             discharge_power = round(abs(current) * voltage, 2)
 
@@ -69,8 +76,16 @@ class BatteryGenerator:
                 measurements=sensor_pb2.BatteryMeasurements(**reading),
                 status="OK",
             )
+            logger.debug(
+                "Preparando envío gRPC para device_id=%s, home_id=%s, sequence=%d",
+                sensor.device_code,
+                home.home_id,
+                sequence,
+            )
+
             try:
-                get_battery_stub().SendBatteryMonitorRequest(request)
+                stub = get_battery_stub()
+                stub.SendBatteryMonitorRequest(request, timeout=5.0)
             except grpc.RpcError as exc:
                 logger.warning(
                     "Battery gRPC failed (%s: %s)",

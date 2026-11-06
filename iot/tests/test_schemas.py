@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -17,7 +17,7 @@ def test_valid_payload() -> None:
         home_id="HOME-1",
         sensor_type=SensorType.SMART_METER,
         sequence_number=1,
-        measured_at=datetime.now(timezone.utc),
+        measured_at=datetime.now(UTC),
         data={"voltage_v": 120.0},
     )
     assert payload.schema_version == "1.0"
@@ -43,7 +43,7 @@ def test_extra_field_rejected() -> None:
             home_id="HOME-1",
             sensor_type=SensorType.SMART_METER,
             sequence_number=1,
-            measured_at=datetime.now(timezone.utc),
+            measured_at=datetime.now(UTC),
             data={},
             unknown="boom",
         )

@@ -79,6 +79,12 @@ contract RedemptionManager is ReentrancyGuard {
     /// @notice Withdraw ETH from the contract. Only owner.
     function withdraw(uint256 amount) external onlyOwner {
         if (amount > address(this).balance) revert InsufficientContractBalance();
+        if (amount == address(this).balance) {
+            // Force-send the final balance so an owner contract without a
+            // payable fallback cannot permanently lock redemption funds.
+            selfdestruct(payable(owner));
+            return;
+        }
         (bool ok,) = payable(owner).call{value: amount}("");
         if (!ok) revert TransferFailed();
     }

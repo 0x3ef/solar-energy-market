@@ -8,6 +8,10 @@ __pycache__/
 htmlcov/
 .coverage
 coverage.xml
+*.log
+.pytest_cache/
+.tox/
+.nox/
 
 # --- Foundry ---
 contracts/lib/
@@ -16,6 +20,8 @@ contracts/cache/
 contracts/broadcast/
 contracts/deployments/*.json
 !contracts/deployments/.gitkeep
+contracts/.env
+contracts/*.secret
 
 # --- Generated gRPC stubs ---
 iot/grpc_client/sensor_pb2.py
@@ -31,6 +37,9 @@ apps/frontend/.next/
 .env
 .env.local
 infrastructure/docker/.env
+**/.env.*
+!.env.example
+!**/.env.example
 
 # --- OS / IDE ---
 .DS_Store

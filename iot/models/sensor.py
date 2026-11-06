@@ -56,6 +56,6 @@ class Sensor:
         """Return the canonical MQTT topic for this device.
 
         The format ``solar/<home_id>/<device_code>/telemetry`` is
-        compatible with AWS IoT Core topic rules and Mosquitto.
+        compatible with local Mosquitto topic rules.
         """
         return f"solar/{self.home_id}/{self.device_code}/telemetry"

@@ -4,7 +4,7 @@ from decimal import Decimal
 
 import pytest
 
-from solar_market.blockchain.token_service import TokenService
+from app.blockchain.token_service import TokenService
 
 
 @pytest.mark.integration

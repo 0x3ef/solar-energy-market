@@ -5,17 +5,16 @@ feed validated telemetry into PostgreSQL, the backend mints SUN
 credits on an EVM chain, and the frontend lets households trade and
 redeem them.
 
-The project is built to run **entirely on a laptop** with a single
-`make setup`. Every external dependency (broker, database, EVM node)
-is a Docker container, and switching to AWS later is a configuration
-change, not a code change.
+The project runs **entirely locally** with Docker Compose. Every runtime
+dependency (broker, database, cache, EVM node, API, and workers) is a
+local container.
 
 ## 1. Stack
 
 | Layer | Technology |
 |---|---|
 | Frontend | React 18 + TypeScript + Vite + wagmi + MetaMask |
-| Backend API | Python 3.12 + AWS Chalice |
+| Backend API | Python 3.12 + FastAPI |
 | Database | PostgreSQL 16 + TimescaleDB |
 | Ingest | Python 3.12 + paho-mqtt |
 | IoT simulation | Python 3.12 + grpcio + Mosquitto |
@@ -26,10 +25,10 @@ change, not a code change.
 | Directory | Responsibility |
 |---|---|
 | `apps/frontend` | React dashboard, MetaMask integration |
-| `apps/backend` | Chalice API, MQTT ingest, services, repositories, blockchain |
+| `apps/backend` | FastAPI API, MQTT ingest, services, repositories, blockchain |
 | `contracts` | Foundry project: SUNToken, EnergyMarketplace, RedemptionManager |
-| `iot` | Simulator, gRPC gateway, MQTT publishers, telemetry schema |
-| `database` | Consolidated schema, migrations, seeds |
+| `iot` | Stateful simulator, gRPC gateway, MQTT publisher, telemetry schema |
+| `database` | Idempotent demo seeds; schema is owned by SQLAlchemy/Alembic |
 | `infrastructure` | Docker Compose, Dockerfiles, Mosquitto config |
 | `docs` | Architecture, MQTT topics, OpenAPI spec, contract docs, diagrams |
 | `scripts` | Setup, seed, test, deploy automation |
@@ -105,7 +104,7 @@ At the end you should see:
 | `gateway` | `solar-gateway` | 50051 | gRPC server |
 | `simulator` | `solar-simulator` | — | Telemetry generator |
 | `subscriber` | `solar-subscriber` | — | MQTT → PostgreSQL |
-| `api` | `solar-api` | 8000 | Chalice HTTP API |
+| `api` | `solar-api` | 8000 | FastAPI HTTP API |
 
 ## 6. Verifying the stack
 
@@ -174,11 +173,13 @@ exactly as production would.
 
 | Document | Content |
 |---|---|
-| `docs/architecture/overview.md` | System diagram, data flow, cross-cutting concerns |
-| `docs/iot/topics.md` | MQTT topic layout and envelope schema |
-| `docs/api/openapi.yaml` | HTTP API contract |
-| `docs/contracts/README.md` | Contract roles, invariants, deployment |
-| `docs/diagrams/system-context.mmd` | Mermaid source for the context diagram |
+| `docs/ARCHITECTURE.md` | System diagram, data flow, and boundaries |
+| `docs/IOT_TELEMETRY.md` | MQTT telemetry contract |
+| `docs/API.md` | HTTP API overview |
+| `docs/BLOCKCHAIN_INTEGRATION.md` | Contract roles, lifecycle, deployment, and reconciliation |
+| `docs/DATABASE.md` | Migration ownership and database model |
+| `docs/diagrams/database.mmd` | Mermaid database entity relationship diagram |
+| `iot/README.md` | IoT simulation model, configuration, commands, and troubleshooting |
 
 ## 10. Environment variables
 
@@ -191,13 +192,13 @@ full list lives in `.env.example`. The most important ones:
 | `POSTGRES_PASSWORD` | `solar` | Database password |
 | `POSTGRES_DB` | `solar` | Database name |
 | `INTERVAL_SECONDS` | `15` | Simulator cycle period |
-| `PUBLISHER` | `mqtt` | Gateway publisher: `console`, `mqtt`, `aws_iot` |
+| `PUBLISHER` | `mqtt` | Gateway publisher: `console` or `mqtt` |
 | `WEB3_PROVIDER_URL` | `http://anvil:8545` | EVM RPC endpoint |
 | `SUN_TOKEN_ADDRESS` | (injected) | SUN token contract |
 | `ENERGY_MARKET_ADDRESS` | (injected) | Marketplace contract |
 | `REDEMPTION_MANAGER_ADDRESS` | (injected) | Redemption contract |
 | `BACKEND_PRIVATE_KEY` | Anvil account #0 | Backend signer |
-| `JWT_SECRET` | `change-me-in-production` | JWT signing key |
+| `JWT_SECRET` | (required) | JWT signing key, at least 32 characters |
 
 ## 11. Troubleshooting
 
@@ -285,5 +286,3 @@ The following extensions are planned but not implemented:
 - On-chain order book (matching currently happens off-chain).
 - Price oracle for the redemption rate.
 - Grafana dashboards fed by TimescaleDB.
-- Deployment to AWS: IoT Core, RDS PostgreSQL, ECS for the backend,
-  Chalice for the API.

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 import pytest
 
 from generators import (
@@ -52,6 +50,17 @@ def test_sequence_numbers_increase(
     simulator.simulate_cycle()
     messages = simulator.simulate_cycle()
     assert all(m["sequence_number"] == 2 for m in messages)
+
+
+def test_sequence_offset_prevents_replay(
+    sample_home: Home, generators
+) -> None:
+    simulator = Simulator(
+        homes=[sample_home],
+        generators=generators,
+        config=SimulationConfig(sequence_offset=100),
+    )
+    assert simulator.simulate_cycle()[0]["sequence_number"] == 101
 
 
 def test_invalid_interval_rejected() -> None:

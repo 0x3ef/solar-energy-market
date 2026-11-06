@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from solar_market.iot.telemetry_validator import validate_envelope
+from app.iot.telemetry_validator import validate_envelope
 
 
 def _valid() -> dict:
@@ -14,7 +14,7 @@ def _valid() -> dict:
         "home_id": "HOME-CALI-001",
         "sensor_type": "smart_meter",
         "sequence_number": 1,
-        "measured_at": datetime.now(timezone.utc).isoformat(),
+        "measured_at": datetime.now(UTC).isoformat(),
         "data": {"voltage_v": 120.5, "current_a": 5.0},
     }
 

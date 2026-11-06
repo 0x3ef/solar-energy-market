@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -23,7 +23,7 @@ def test_console_publisher_logs(
                 "home_id": "HOME-1",
                 "sensor_type": SensorType.SMART_METER.value,
                 "sequence_number": 1,
-                "measured_at": datetime.now(timezone.utc).isoformat(),
+                "measured_at": datetime.now(UTC).isoformat(),
                 "schema_version": "1.0",
                 "data": {"voltage_v": 120.0},
             },

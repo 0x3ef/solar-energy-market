@@ -21,11 +21,26 @@ logger = logging.getLogger(__name__)
 class SolarInverterGenerator:
     """Produce inverter readings with accumulated lifetime energy."""
 
-    def __init__(self, use_grpc: bool = True) -> None:
+    def __init__(
+        self,
+        use_grpc: bool = True,
+        interval_seconds: float = 15.0,
+        random_seed: int | None = None,
+    ) -> None:
+        if interval_seconds <= 0:
+            raise ValueError("interval_seconds must be greater than zero")
         self._use_grpc = use_grpc
+        self._interval_seconds = interval_seconds
+        self._random = random.Random(random_seed)
         self._lifetime_kwh: dict[str, float] = {}
-        self._efficiency = BoundedWalk(lo=85.0, hi=99.0, step=0.5)
-        self._temperature = BoundedWalk(lo=25.0, hi=75.0, step=1.5)
+        self._efficiency = BoundedWalk(
+            lo=85.0, hi=99.0, step=0.5,
+            rng=random.Random(self._random.random()),
+        )
+        self._temperature = BoundedWalk(
+            lo=25.0, hi=75.0, step=1.5,
+            rng=random.Random(self._random.random()),
+        )
 
     def generate(
         self,
@@ -36,12 +51,16 @@ class SolarInverterGenerator:
     ) -> dict[str, Any]:
         """Return one inverter reading for ``sensor``."""
         capacity_kw = float(home.solar_capacity_kw)
-        dc_power = round(random.uniform(0, capacity_kw * 1000), 2)
+        dc_power = round(
+            self._random.uniform(0, capacity_kw * 1000), 2
+        )
         efficiency = round(self._efficiency.next(), 2)
         ac_power = round(dc_power * efficiency / 100.0, 2)
 
         lifetime = self._lifetime_kwh.get(sensor.device_code, 0.0)
-        lifetime += dc_power * (15.0 / 3600.0) / 1000.0  # 15s slice
+        lifetime += (
+            dc_power * (self._interval_seconds / 3600.0) / 1000.0
+        )
         self._lifetime_kwh[sensor.device_code] = lifetime
 
         reading = {
@@ -83,7 +102,7 @@ class SolarInverterGenerator:
             ),
         )
         try:
-            get_solar_inverter_stub().SendSolarInverterRequest(request)
+            get_solar_inverter_stub().SendSolarInverterRequest(request, timeout=5.0)
         except grpc.RpcError as exc:
             logger.warning(
                 "Inverter gRPC failed (%s: %s)",

@@ -38,7 +38,7 @@ contract EnergyMarketplaceTest is Test {
         vm.prank(seller);
         uint256 orderId = market.placeSellOrder(50e18, 0.01 ether);
 
-        uint256 cost = 10e18 * 0.01 ether; // 10 SUN
+        uint256 cost = (10e18 * 0.01 ether) / 1e18; // 10 SUN
         vm.prank(buyer);
         market.fillOrder{value: cost}(orderId, 10e18, buyer);
 

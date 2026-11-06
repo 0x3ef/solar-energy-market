@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import queue
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import grpc
 import paho.mqtt.client as mqtt
@@ -23,7 +23,7 @@ pytestmark = pytest.mark.integration
 
 def _wait_for_message(
     client: mqtt.Client,
-    inbox: "queue.Queue[tuple[str, dict]]",
+    inbox: queue.Queue[tuple[str, dict]],
     topic_prefix: str,
     timeout: float = 5.0,
 ) -> tuple[str, dict]:
@@ -41,7 +41,7 @@ def _wait_for_message(
 
 def test_gateway_republishes_to_mqtt(mqtt_host: str, gateway_address: str) -> None:
     """Send a smart-meter reading through gRPC and expect it on MQTT."""
-    inbox: "queue.Queue[tuple[str, dict]]" = queue.Queue()
+    inbox: queue.Queue[tuple[str, dict]] = queue.Queue()
 
     client = mqtt.Client(
         callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -63,7 +63,7 @@ def test_gateway_republishes_to_mqtt(mqtt_host: str, gateway_address: str) -> No
             sensor_pb2.SmartMeterSensorRequest(
                 device_id="SM-INT-001",
                 home_id="HOME-INT",
-                timestamp=datetime.now(timezone.utc).isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
                 sequence=1,
                 measurements=sensor_pb2.SmartMeterMeasurements(
                     voltage_v=120.0
@@ -72,7 +72,7 @@ def test_gateway_republishes_to_mqtt(mqtt_host: str, gateway_address: str) -> No
         )
         channel.close()
 
-        topic, payload = _wait_for_message(
+        _topic, payload = _wait_for_message(
             client, inbox, "solar/HOME-INT/SM-INT-001/"
         )
         assert payload["device_id"] == "SM-INT-001"

@@ -1,4 +1,4 @@
-"""MQTT publisher for Mosquitto (local) and AWS IoT Core (prod)."""
+"""MQTT publisher for the local Mosquitto broker."""
 
 from __future__ import annotations
 

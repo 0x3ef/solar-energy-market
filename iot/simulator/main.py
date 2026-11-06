@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import signal
+import time
 from contextlib import suppress
 from threading import Event
 
@@ -15,6 +16,7 @@ from generators import (
     SolarInverterGenerator,
     WeatherGenerator,
 )
+from generators.base import SensorGenerator
 from grpc_client.channel import close_channel
 from models.sensor import SensorType
 from simulator.coordinator import SimulationConfig, Simulator
@@ -40,18 +42,22 @@ def main() -> None:
         format="%(asctime)s %(levelname)s %(name)s - %(message)s",
     )
 
-    generators = {
+    generators: dict[SensorType, SensorGenerator] = {
         SensorType.SMART_METER: SmartMeterGenerator(
-            use_grpc=settings.use_grpc
+            use_grpc=settings.use_grpc,
+            interval_seconds=settings.interval_seconds,
+            random_seed=settings.random_seed,
         ),
         SensorType.SOLAR_INVERTER: SolarInverterGenerator(
-            use_grpc=settings.use_grpc
+            use_grpc=settings.use_grpc,
+            interval_seconds=settings.interval_seconds,
+            random_seed=settings.random_seed,
         ),
         SensorType.WEATHER_SENSOR: WeatherGenerator(
-            use_grpc=settings.use_grpc
+            use_grpc=settings.use_grpc, random_seed=settings.random_seed
         ),
         SensorType.BATTERY_MONITOR: BatteryGenerator(
-            use_grpc=settings.use_grpc
+            use_grpc=settings.use_grpc, random_seed=settings.random_seed
         ),
     }
 
@@ -60,7 +66,14 @@ def main() -> None:
         generators=generators,
         publisher=None,  # The gateway owns MQTT delivery.
         config=SimulationConfig(
-            interval_seconds=settings.interval_seconds
+            interval_seconds=settings.interval_seconds,
+            # A fresh process must not replay low sequence numbers because
+            # the backend intentionally deduplicates by device and sequence.
+            sequence_offset=(
+                settings.sequence_offset
+                if settings.sequence_offset is not None
+                else int(time.time())
+            ),
         ),
     )
 
@@ -72,6 +85,8 @@ def main() -> None:
     finally:
         close_channel()
 
+    print("Shutting down multi-home IoT simulator...")
 
 if __name__ == "__main__":
+    print("Starting multi-home IoT simulator...")
     main()
