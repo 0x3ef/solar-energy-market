@@ -7,7 +7,7 @@
 -- installation and one wallet.
 --
 -- Passwords are intentionally left as NULL in the seed: they are set
--- through the API (`POST /api/v1/users`) which hashes them with bcrypt
+-- through the API (`POST /api/v1/auth/register`) which hashes them with Argon2id
 -- before storing. The seeds only provide the identity of the accounts
 -- so that homes, devices and wallets can be linked to a real user row.
 
