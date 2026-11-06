@@ -24,8 +24,6 @@ contracts/.env
 contracts/*.secret
 
 # --- Generated gRPC stubs ---
-iot/grpc_client/sensor_pb2.py
-iot/grpc_client/sensor_pb2_grpc.py
 
 # --- Node / frontend ---
 apps/frontend/node_modules/
